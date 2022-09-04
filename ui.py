@@ -14,7 +14,7 @@ deck = ['♥A', '♥2', '♥3', '♥4', '♥5', '♥6', '♥7', '♥8', '♥9', 
 
 
 # -------------------------------* Get all data from poker file *------------------------------- #
-# TODO geting data from Poker file
+# TODO getting data from Poker file
 def all_cards():
     global flop, players
     status = ['alive', 'fold']
@@ -216,10 +216,20 @@ def show_card(round_end=False):
                                font=('', 20, '')))
     flop["label"][no_of_loop].pack()
 
+
+    ######
+    flop["frame"].append(LabelFrame(canvas, bg="#0F3C25", borderwidth=0, width=160, height=25))
+    flop["frame"][2].place(x=435, y=210)
+    flop["frame"][2].pack_propagate(False)
+
+    flop["label"].append(Label(flop["frame"][2], text=f"Highest Bid: {highest_bid} Chips", bg="#0F3C25", fg='#3B7A5A',
+                               font=('', 15, '')))
+    flop["label"][no_of_loop+1].pack()
+
     for k, p in players.items():
         p["frame"].append(LabelFrame(canvas, text=k, borderwidth=0, bg='black', fg='#a6a6a6'))
 
-        # asign x and y for each player
+        # assign x and y for each player
         if k == "You":
             p["frame"][0].place(x=640, y=450)
 
@@ -308,7 +318,7 @@ call_button = ttk.Button(my_frame, text="Call", command=end_round)
 
 call_button.grid(row=0, column=3, pady=5)
 
-fold_button = ttk.Button(my_frame, text="Fold", command=fold)
+fold_button = ttk.Button(my_frame, text="Fold", command=show_card)
 fold_button.grid(row=0, column=4, padx=10, pady=5)
 
 raise_button = ttk.Button(my_frame, text="Raise", command=_raise)
