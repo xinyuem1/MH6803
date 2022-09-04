@@ -10,8 +10,6 @@ import random
 
 deck = ['♥A', '♥2', '♥3', '♥4', '♥5', '♥6', '♥7', '♥8', '♥9', '♥10', '♥J', '♥Q', '♥K', '♠A', '♠2', '♠3', '♠4', '♠5', '♠6', '♠7', '♠8', '♠9', '♠10', '♠J', '♠Q', '♠K', '♣A', '♣2', '♣3', '♣4', '♣5', '♣6', '♣7', '♣8', '♣9', '♣10', '♣J', '♣Q', '♣K', '♦A', '♦2', '♦3', '♦4', '♦5', '♦6', '♦7', '♦8', '♦9', '♦10', '♦J', '♦Q', '♦K']
 
-# ('aqua', 'step', 'clam', 'alt', 'default', 'classic')
-
 
 # -------------------------------* Get all data from poker file *------------------------------- #
 # TODO getting data from Poker file
@@ -139,13 +137,14 @@ def get_flop_card(cards, n_cards, round_end=False):
         win_con = ["Royal Flush", "Straight Flush", "Full house", "High card"]
 
         # -----------------------* Display Winner label *----------------------- #
-        flop["frame"][2].config(width=180, height=50)
-        flop["frame"][2].place(x=425, y=185)
+        flop["frame"][2].config(width=180, height=50, bg="#a00405", bd=2)
+        flop["frame"][2].place(x=425, y=180)
         flop["label"][n+1].config(text=f"Winner: {random.choice(winner)}\n{random.choice(win_con)}",
-                                    bg="#0F3C25", anchor="center", justify=CENTER,
-                                    font=("", 18, ""), fg="#F6E382")
+                                    bg="#a00405", anchor="center", justify=CENTER,
+                                    font=("Impact", 18, ""), fg="#fff166")
 
-        flop["label"][n].config(fg="#F6E382")
+
+        flop["label"][n].config(fg="#F6E382", font=("Impact", 20,""))
 
 
 def get_player_card(cards, k, round_end, status):
@@ -234,11 +233,11 @@ def show_card(round_end=False):
 
     # -----------------------* highest bid *----------------------- #
     flop["frame"].append(LabelFrame(canvas, bg="#0F3C25", borderwidth=0, width=160, height=25))
-    flop["frame"][2].place(x=435, y=210)
+    flop["frame"][2].place(x=435, y=205)
     flop["frame"][2].pack_propagate(False)
     flop["label"].append(Label(flop["frame"][2], text=f"Highest Bid: {highest_bid} Chips", bg="#0F3C25", fg='#3B7A5A',
                                font=('', 15, '')))
-    flop["label"][no_of_loop+1].pack()
+    flop["label"][no_of_loop+1].pack(padx=4, pady=4)
 
     # -----------------------* Display all table *----------------------- #
     get_flop_card(flop["cards"], no_of_loop, round_end)
