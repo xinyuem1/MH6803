@@ -124,13 +124,38 @@ def resize_pic(pic):
 
 
 # -----------------------* Display Card/ Back of Card / Fold *----------------------- #
-def get_flop_card(cards):
+def get_flop_card(cards, n_cards, round_end=False):
     global flop_image
     n = 0
-    for c in cards:
-        flop["images"].append(resize_cards(f'images/cards/{c}.png'))
-        flop["label"][n].config(image=flop["images"][n])
-        n += 1
+    # -----------------------* Check Round end / not show card *----------------------- #
+    if not round_end:
+        for c in cards:
+            flop["images"].append(resize_cards(f'images/cards/{c}.png'))
+            flop["label"][n].config(image=flop["images"][n])
+            n += 1
+
+    # -----------------------* Show winner *----------------------- #
+    elif round_end:
+        flop['frame'][0].config(width=160, height=70, bg="#0F3C25")
+        flop["frame"][0].place(x=435, y=250)
+        flop["frame"][0].grid_propagate(False)
+
+        for n in range(n_cards):
+            flop["label"][n].grid_forget()
+            n += 1
+        winner = ["You", "Player2", "Player3"]
+        win_con = ["Royal Flush", "Straight Flush", "Full house", "High card"]
+
+        flop["label"][0].config(text=f"{random.choice(winner)}\n{random.choice(win_con)}",
+                                bg="#0F3C25", anchor="center", justify=LEFT,
+                                font=("", 25, ""), fg="#3B7A5A")
+        flop["label"][0].grid(row=0, column=0)
+
+        # -----------------------* Display Winner label *----------------------- #
+        flop["frame"][2].config(width=120, height=30)
+        flop["frame"][2].place(x=455, y=205)
+        flop["label"][n+1].config(text="Winner", bg="#0F3C25",
+                                font=("", 28, ""), fg="#3B7A5A")
 
 
 def get_player_card(cards, k, round_end, status):
@@ -166,7 +191,7 @@ def fold():
     pass
 
 
-def check():
+def call():
     pass
 
 
@@ -197,17 +222,18 @@ def show_card(round_end=False):
     for widget in canvas.winfo_children():
         widget.destroy()
 
+    # -----------------------* Create card frame *----------------------- #
     flop["frame"].append(LabelFrame(canvas, bg="#1e7849", borderwidth=0))
     flop["frame"][0].place(x=360, y=240)
     no_of_loop = 0
 
+    # -----------------------* Create each card Label *----------------------- #
     for _ in flop["cards"]:
         flop["label"].append(Label(flop["frame"][0], bg="#1e7849"))
         flop["label"][no_of_loop].grid(row=0, column=no_of_loop)
         no_of_loop += 1
 
-    get_flop_card(flop["cards"])
-
+    # -----------------------* Create Pot *----------------------- #
     flop["frame"].append(LabelFrame(canvas, bg="#0F3C25", borderwidth=0, width=180, height=30))
     flop["frame"][1].place(x=425, y=335)
     flop["frame"][1].pack_propagate(False)
@@ -216,43 +242,46 @@ def show_card(round_end=False):
                                font=('', 20, '')))
     flop["label"][no_of_loop].pack()
 
-
-    ######
+    # -----------------------* highest bid *----------------------- #
     flop["frame"].append(LabelFrame(canvas, bg="#0F3C25", borderwidth=0, width=160, height=25))
     flop["frame"][2].place(x=435, y=210)
     flop["frame"][2].pack_propagate(False)
-
     flop["label"].append(Label(flop["frame"][2], text=f"Highest Bid: {highest_bid} Chips", bg="#0F3C25", fg='#3B7A5A',
                                font=('', 15, '')))
     flop["label"][no_of_loop+1].pack()
 
+    # -----------------------* Display all table *----------------------- #
+    get_flop_card(flop["cards"], no_of_loop, round_end)
+
+    # -----------------------* Create Players *----------------------- #
     for k, p in players.items():
-        p["frame"].append(LabelFrame(canvas, text=k, borderwidth=0, bg='black', fg='#a6a6a6'))
+        # player frame
+        p["frame"].append(LabelFrame(canvas, text=k, borderwidth=0, bg='black', fg='white'))
 
         # assign x and y for each player
         if k == "You":
-            p["frame"][0].place(x=640, y=450)
+            p["frame"][0].place(x=440, y=450)
 
         elif k == "Player2":
-            p["frame"][0].place(x=820, y=240)
+            p["frame"][0].place(x=640, y=450)
 
         elif k == "Player3":
-            p["frame"][0].place(x=640, y=0)
+            p["frame"][0].place(x=820, y=240)
 
         elif k == "Player4":
-            p["frame"][0].place(x=440, y=0)
+            p["frame"][0].place(x=640, y=0)
 
         elif k == "Player5":
-            p["frame"][0].place(x=240, y=0)
+            p["frame"][0].place(x=440, y=0)
 
         elif k == "Player6":
-            p["frame"][0].place(x=60, y=240)
+            p["frame"][0].place(x=240, y=0)
 
         elif k == "Player7":
-            p["frame"][0].place(x=240, y=450)
+            p["frame"][0].place(x=60, y=240)
 
         elif k == "Player8":
-            p["frame"][0].place(x=440, y=450)
+            p["frame"][0].place(x=240, y=450)
 
         # first card
         p["label"].append(Label(p["frame"][0], borderwidth=0, bg='black'))
@@ -263,11 +292,11 @@ def show_card(round_end=False):
         p["label"][1].grid(row=0, column=1, padx=5, sticky="E")
 
         # display chips left
-        p["label"].append(Label(p["frame"][0], text=f"Chips: {p['chips']}", bg='black', fg='#a6a6a6'))
+        p["label"].append(Label(p["frame"][0], text=f"Chips: {p['chips']}", bg='black', fg='white'))
         p["label"][2].grid(row=1, column=0, sticky="W", columnspan=2)
 
         if p["seats"] == "BB" or p["seats"] == "SB":
-            p["label"].append(Label(p["frame"][0], text=p["seats"], bg='black', fg='#a6a6a6'))
+            p["label"].append(Label(p["frame"][0], text=p["seats"], bg='black', fg='white'))
             p["label"][3].grid(row=1, column=1, sticky="E")
 
         get_player_card(p["cards"], k, round_end, p["status"])
@@ -314,7 +343,7 @@ canvas.grid_propagate(False)
 my_frame = Frame(root, bg="black")
 my_frame.pack(pady=20, padx=20)
 
-call_button = ttk.Button(my_frame, text="Call", command=end_round)
+call_button = ttk.Button(my_frame, text="Call", command=call)
 
 call_button.grid(row=0, column=3, pady=5)
 
@@ -324,7 +353,11 @@ fold_button.grid(row=0, column=4, padx=10, pady=5)
 raise_button = ttk.Button(my_frame, text="Raise", command=_raise)
 raise_button.grid(row=0, column=2, padx=10, pady=5)
 
+win_test = ttk.Button(my_frame, text="Win test", command=end_round)
+win_test.grid(row=0, column=5, padx=10, pady=5)
+
 show_card()
+
 value_label = ttk.Label(my_frame, text=get_current_value())
 value_label.grid(row=0, column=1)
 
