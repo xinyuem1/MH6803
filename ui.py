@@ -127,37 +127,25 @@ def resize_pic(pic):
 def get_flop_card(cards, n_cards, round_end=False):
     global flop_image
     n = 0
-    # -----------------------* Check Round end / not show card *----------------------- #
-    if not round_end:
-        for c in cards:
-            flop["images"].append(resize_cards(f'images/cards/{c}.png'))
-            flop["label"][n].config(image=flop["images"][n])
-            n += 1
+    # -----------------------* Show card *----------------------- #
+    for c in cards:
+        flop["images"].append(resize_cards(f'images/cards/{c}.png'))
+        flop["label"][n].config(image=flop["images"][n])
+        n += 1
 
-    # -----------------------* Show winner *----------------------- #
-    elif round_end:
-        flop['frame'][0].config(width=160, height=70, bg="#0F3C25")
-        flop["frame"][0].place(x=435, y=250)
-        flop["frame"][0].grid_propagate(False)
-
-        for n in range(n_cards):
-            flop["label"][n].grid_forget()
-            n += 1
+    # -----------------------* Check Round end / Show winner *----------------------- #
+    if round_end:
         winner = ["You", "Player2", "Player3"]
         win_con = ["Royal Flush", "Straight Flush", "Full house", "High card"]
 
-        flop["label"][0].config(text=f"{random.choice(winner)}\n{random.choice(win_con)}",
-                                bg="#0F3C25", anchor="center", justify=LEFT,
-                                font=("", 25, ""), fg="#9DB0A3")
-        flop["label"][0].grid(row=0, column=0)
-
         # -----------------------* Display Winner label *----------------------- #
-        flop["frame"][2].config(width=120, height=30)
-        flop["frame"][2].place(x=455, y=205)
-        flop["label"][n+1].config(text="Winner", bg="#0F3C25",
-                                font=("", 28, ""), fg="#F6E382")
+        flop["frame"][2].config(width=180, height=50)
+        flop["frame"][2].place(x=425, y=185)
+        flop["label"][n+1].config(text=f"Winner: {random.choice(winner)}\n{random.choice(win_con)}",
+                                    bg="#0F3C25", anchor="center", justify=CENTER,
+                                    font=("", 18, ""), fg="#F6E382")
 
-        flop["label"][n].config(fg="#9DB0A3")
+        flop["label"][n].config(fg="#F6E382")
 
 
 def get_player_card(cards, k, round_end, status):
