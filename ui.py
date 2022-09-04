@@ -148,14 +148,16 @@ def get_flop_card(cards, n_cards, round_end=False):
 
         flop["label"][0].config(text=f"{random.choice(winner)}\n{random.choice(win_con)}",
                                 bg="#0F3C25", anchor="center", justify=LEFT,
-                                font=("", 25, ""), fg="#3B7A5A")
+                                font=("", 25, ""), fg="#9DB0A3")
         flop["label"][0].grid(row=0, column=0)
 
         # -----------------------* Display Winner label *----------------------- #
         flop["frame"][2].config(width=120, height=30)
         flop["frame"][2].place(x=455, y=205)
         flop["label"][n+1].config(text="Winner", bg="#0F3C25",
-                                font=("", 28, ""), fg="#3B7A5A")
+                                font=("", 28, ""), fg="#F6E382")
+
+        flop["label"][n].config(fg="#9DB0A3")
 
 
 def get_player_card(cards, k, round_end, status):
