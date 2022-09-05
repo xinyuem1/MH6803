@@ -38,71 +38,18 @@ def all_cards():
             "seats": get_seat(),
             "frame": [],
             "label": [],
-            "images": [],
-        },
-        "Player2": {
-            "cards": [random.choice(deck), random.choice(deck)],
-            "chips": 500,
-            "status": random.choice(status),
-            "seats": get_seat(),
-            "frame": [],
-            "label": [],
-            "images": [],
-        },
-        "Player3": {
-            "cards": [random.choice(deck), random.choice(deck)],
-            "chips": 500,
-            "status": random.choice(status),
-            "seats": get_seat(),
-            "frame": [],
-            "label": [],
-            "images": [],
-        },
-        "Player4": {
-            "cards": [random.choice(deck), random.choice(deck)],
-            "chips": 500,
-            "status": "fold",
-            "seats": get_seat(),
-            "frame": [],
-            "label": [],
-            "images": [],
-        },
-        "Player5": {
-            "cards": ["♣3", "♣K"],
-            "chips": 500,
-            "status": "alive",
-            "seats": get_seat(),
-            "frame": [],
-            "label": [],
-            "images": [],
-        },
-        "Player6": {
-            "cards": ["♣3", "♣K"],
-            "chips": 500,
-            "status": "alive",
-            "seats": get_seat(),
-            "frame": [],
-            "label": [],
-            "images": [],
-        },
-        "Player7": {
-            "cards": [random.choice(deck), random.choice(deck)],
-            "chips": random.randint(0, 500),
-            "status": "alive",
-            "seats": get_seat(),
-            "frame": [],
-            "label": [],
-            "images": []},
-        "Player8": {
-            "cards": [random.choice(deck), random.choice(deck)],
-            "chips": random.randint(0, 500),
-            "status": "alive",
-            "seats": get_seat(),
-            "frame": [],
-            "label": [],
-            "images": []}
-    }
+            "images": []}}
 
+    for player in range(num_player-1):
+        players[f"Player{player + 2}"] = {
+            "cards": [random.choice(deck), random.choice(deck)],
+            "chips": 500,
+            "status": random.choice(status),
+            "seats": get_seat(),
+            "frame": [],
+            "label": [],
+            "images": [],
+        }
 
 # -------------------------------* Resize Images *------------------------------- #
 def resize_cards(card):
@@ -308,6 +255,17 @@ def show_card(round_end=False):
     slider.focus()
     slider.grid(row=0, column=0, padx=5)
 
+
+# -------------------------------* User selected number of player *------------------------------- #
+game_start = False
+
+while not game_start:
+    global num_player
+    num_player = int(input("How many players you want? (2-8 players) "))
+    if 2 <= num_player <= 8:
+        game_start = True
+    else:
+        print("Please input number between 2 to 8")
 
 # -------------------------------* TK inter setup *------------------------------- #
 
