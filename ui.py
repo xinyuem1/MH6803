@@ -91,7 +91,7 @@ def get_flop_card(cards, stage):
 
 def get_player_card(cards, k, stage, fold):
     global Round
-    if Round != 1:
+    if Round != 0:
         time.sleep(0.1)
     global player_image
     n = 0
