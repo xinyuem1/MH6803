@@ -1,55 +1,35 @@
 # -------------------------------* Import statement *------------------------------- #
-
+import Poker
 from tkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
 from ttkthemes import ThemedTk
-import random
+import time
+import pandas as pd
+
 
 # -------------------------------* test deck of cards *------------------------------- #
 
-deck = ['♥A', '♥2', '♥3', '♥4', '♥5', '♥6', '♥7', '♥8', '♥9', '♥10', '♥J', '♥Q', '♥K', '♠A', '♠2', '♠3', '♠4', '♠5', '♠6', '♠7', '♠8', '♠9', '♠10', '♠J', '♠Q', '♠K', '♣A', '♣2', '♣3', '♣4', '♣5', '♣6', '♣7', '♣8', '♣9', '♣10', '♣J', '♣Q', '♣K', '♦A', '♦2', '♦3', '♦4', '♦5', '♦6', '♦7', '♦8', '♦9', '♦10', '♦J', '♦Q', '♦K']
 
-
-# -------------------------------* Get all data from poker file *------------------------------- #
-# TODO getting data from Poker file
-def all_cards():
+# -------------------------------* Get data from poker file *------------------------------- #
+def data_convert(d):
     global flop, players
-    status = ['alive', 'fold']
-    seat = ['BB', 'SB', '', '', '', '', '', '']
 
-    def get_seat():
-        s = random.choice(seat)
-        seat.remove(s)
-        return s
+    flop = d['board']
+    flop["frame"] = []
+    flop["label"] = []
+    flop["images"] = []
+    del d['board']
 
-    flop = {"cards": [random.choice(deck), random.choice(deck), random.choice(deck), random.choice(deck),
-                      random.choice(deck)],
-            "frame": [],
-            "label": [],
-            "images": [],
-            "pot": random.randint(25, 2000)
-            }
-    players = {
-        "You": {
-            "cards": [random.choice(deck), random.choice(deck)],
-            "chips": random.randint(0, 500),
-            "status": 'alive',
-            "seats": get_seat(),
-            "frame": [],
-            "label": [],
-            "images": []}}
+    players = {}
+    for key, value in d.items():
+        players[key] = d[key]
+        players[key]["frame"] = []
+        players[key]["label"] = []
+        players[key]["images"] = []
 
-    for player in range(num_player-1):
-        players[f"Player{player + 2}"] = {
-            "cards": [random.choice(deck), random.choice(deck)],
-            "chips": 500,
-            "status": random.choice(status),
-            "seats": get_seat(),
-            "frame": [],
-            "label": [],
-            "images": [],
-        }
+    return flop, players
+
 
 # -------------------------------* Resize Images *------------------------------- #
 def resize_cards(card):
@@ -69,7 +49,7 @@ def resize_pic(pic):
 
 
 # -----------------------* Display Card/ Back of Card / Fold *----------------------- #
-def get_flop_card(cards, n_cards, round_end=False):
+def get_flop_card(cards, stage):
     global flop_image
     n = 0
     # -----------------------* Show card *----------------------- #
@@ -79,59 +59,86 @@ def get_flop_card(cards, n_cards, round_end=False):
         n += 1
 
     # -----------------------* Check Round end / Show winner *----------------------- #
-    if round_end:
-        winner = ["You", "Player2", "Player3"]
-        win_con = ["Royal Flush", "Straight Flush", "Full house", "High card"]
+    score = 0
+    winner = ''
+    win_con = ''
+
+    global reward
+
+    if stage == 'begin':
+        for s in players:
+            if players[s]['score'] > score:
+                print(s, players[s]['score'])
+                winner = s
+                win_con = players[s]['type']
+                score = players[s]['score']
+
+            elif len(poker.notfold()) == 1:
+                win_con = "All fold"
+                if not players[s]['fold']:
+                    winner = s
 
         # -----------------------* Display Winner label *----------------------- #
         flop["frame"][2].config(width=180, height=50, bg="#a00405", bd=2)
         flop["frame"][2].place(x=425, y=180)
-        flop["label"][n+1].config(text=f"Winner: {random.choice(winner)}\n{random.choice(win_con)}",
+        flop["label"][n + 1].config(text=f"Winner: {winner}\n{win_con}",
                                     bg="#a00405", anchor="center", justify=CENTER,
                                     font=("Impact", 18, ""), fg="#fff166")
 
+        flop["label"][n].config(text=f"Pot: {reward} Chips", fg="#F6E382", font=("Impact", 20, ""))
+        reward = 0
 
-        flop["label"][n].config(fg="#F6E382", font=("Impact", 20,""))
 
-
-def get_player_card(cards, k, round_end, status):
+def get_player_card(cards, k, stage, fold):
+    global Round
+    if Round != 1:
+        time.sleep(0.1)
     global player_image
     n = 0
-    if status == "fold":
+    if fold:
         players[k]["label"][1].grid_forget()
         players[k]["images"].append(resize_pic(f'images/cards/fold.png'))
         players[k]["label"][0].config(image=players[k]["images"][0])
         players[k]["label"][0].grid(row=0, column=0, columnspan=2, padx=10)
+        players[k]["label"][0].update()
+
+    elif len(cards) == 0:
+        players[k]["images"].append(resize_pic(f'images/cards/none.png'))
+        players[k]["label"][0].config(image=players[k]["images"][0])
+        players[k]["label"][0].grid(row=0, column=0, columnspan=2, padx=10)
+        players[k]["label"][0].update()
 
     else:
         for c in cards:
             # display player1 card / other player will display at the end of each round
-            if k == "You" or round_end:
+            if k == "You" or stage == 'begin':
                 players[k]["images"].append(resize_cards(f'images/cards/{c}.png'))
                 players[k]["label"][n].config(image=players[k]["images"][n])
+                players[k]["label"][n].update()
+
 
             else:
                 players[k]["images"].append(resize_cards(f'images/cards/back.png'))
                 players[k]["label"][n].config(image=players[k]["images"][n])
-
+                players[k]["label"][n].update()
             n += 1
-
-
-# -----------------------* End round *----------------------- #
-def end_round():
-    show_card(True)
 
 
 # -----------------------* User Input Command *----------------------- #
 def fold():
-    pass
+    global loop_pause
+    loop_pause = False
 
 
 def call():
-    pass
+    global loop_pause
+    loop_pause = False
 
 
 def _raise():
+    global loop_pause
+    loop_pause = False
+
     bid = int(slider.get())
     print(bid)
 
@@ -150,14 +157,18 @@ def slider_changed(event):
 
 
 # -----------------------* Display Board / Player *----------------------- #
-def show_card(round_end=False):
+def show_card(d):
     # get all data
-    all_cards()
+    data_convert(d)
 
     # reset all widget to avoid bugs(sizing)
     for widget in canvas.winfo_children():
         widget.destroy()
 
+    global reward
+    if flop['pot'] >= reward:
+        reward = flop['pot']
+    print(flop['pot'], reward)
     # -----------------------* Create card frame *----------------------- #
     flop["frame"].append(LabelFrame(canvas, bg="#1e7849", borderwidth=0))
     flop["frame"][0].place(x=360, y=240)
@@ -173,24 +184,25 @@ def show_card(round_end=False):
     flop["frame"].append(LabelFrame(canvas, bg="#0F3C25", borderwidth=0, width=180, height=30))
     flop["frame"][1].place(x=425, y=335)
     flop["frame"][1].pack_propagate(False)
-
-    flop["label"].append(Label(flop["frame"][1], text=f"Pot: {flop['pot']} Chips", bg="#0F3C25", fg='#3B7A5A',
+    flop["label"].append(Label(flop["frame"][1], text=f"Pot: {reward} Chips", bg="#0F3C25", fg='#3B7A5A',
                                font=('', 20, '')))
     flop["label"][no_of_loop].pack()
 
     # -----------------------* highest bid *----------------------- #
-    flop["frame"].append(LabelFrame(canvas, bg="#0F3C25", borderwidth=0, width=160, height=25))
-    flop["frame"][2].place(x=435, y=205)
+    flop["frame"].append(LabelFrame(canvas, bg="#0F3C25", borderwidth=0, width=180, height=25))
+    flop["frame"][2].place(x=425, y=205)
     flop["frame"][2].pack_propagate(False)
-    flop["label"].append(Label(flop["frame"][2], text=f"Highest Bid: {highest_bid} Chips", bg="#0F3C25", fg='#3B7A5A',
-                               font=('', 15, '')))
-    flop["label"][no_of_loop+1].pack(padx=4, pady=4)
+    flop["label"].append(
+        Label(flop["frame"][2], text=f"Highest Bid: {flop['highest_bid']} Chips", bg="#0F3C25", fg='#3B7A5A',
+              font=('', 15, '')))
+    flop["label"][no_of_loop + 1].pack(padx=4, pady=4)
 
     # -----------------------* Display all table *----------------------- #
-    get_flop_card(flop["cards"], no_of_loop, round_end)
+    get_flop_card(flop["cards"], flop["stage"])
 
     # -----------------------* Create Players *----------------------- #
     for k, p in players.items():
+
         # player frame
         p["frame"].append(LabelFrame(canvas, text=k, borderwidth=0, bg='black', fg='white'))
 
@@ -198,25 +210,25 @@ def show_card(round_end=False):
         if k == "You":
             p["frame"][0].place(x=440, y=450)
 
-        elif k == "Player2":
+        elif k == "F1":
             p["frame"][0].place(x=640, y=450)
 
-        elif k == "Player3":
+        elif k == "F2":
             p["frame"][0].place(x=820, y=240)
 
-        elif k == "Player4":
+        elif k == "F3":
             p["frame"][0].place(x=640, y=0)
 
-        elif k == "Player5":
+        elif k == "F4":
             p["frame"][0].place(x=440, y=0)
 
-        elif k == "Player6":
+        elif k == "F5":
             p["frame"][0].place(x=240, y=0)
 
-        elif k == "Player7":
+        elif k == "F6":
             p["frame"][0].place(x=60, y=240)
 
-        elif k == "Player8":
+        elif k == "F7":
             p["frame"][0].place(x=240, y=450)
 
         # first card
@@ -228,14 +240,15 @@ def show_card(round_end=False):
         p["label"][1].grid(row=0, column=1, padx=5, sticky="E")
 
         # display chips left
-        p["label"].append(Label(p["frame"][0], text=f"Chips: {p['chips']}", bg='black', fg='white'))
+        p["label"].append(
+            Label(p["frame"][0], text=f"Chips: {p['chips']}\n total bet: {p['bet']}", bg='black', fg='white'))
         p["label"][2].grid(row=1, column=0, sticky="W", columnspan=2)
 
         if p["seats"] == "BB" or p["seats"] == "SB":
             p["label"].append(Label(p["frame"][0], text=p["seats"], bg='black', fg='white'))
-            p["label"][3].grid(row=1, column=1, sticky="E")
+            p["label"][3].grid(row=1, column=1, sticky="NE")
 
-        get_player_card(p["cards"], k, round_end, p["status"])
+        get_player_card(p["cards"], k, flop['stage'], p["fold"])
 
     # to change scale value every turn
     global slider
@@ -245,7 +258,7 @@ def show_card(round_end=False):
 
     slider = ttk.Scale(
         my_frame,
-        from_=highest_bid + 1,
+        from_=flop["highest_bid"] + 1,
         to=players["You"]["chips"],
         orient='horizontal',
         command=slider_changed,
@@ -256,17 +269,6 @@ def show_card(round_end=False):
     slider.grid(row=0, column=0, padx=5)
 
 
-# -------------------------------* User selected number of player *------------------------------- #
-game_start = False
-
-while not game_start:
-    global num_player
-    num_player = int(input("How many players you want? (2-8 players) "))
-    if 2 <= num_player <= 8:
-        game_start = True
-    else:
-        print("Please input number between 2 to 8")
-
 # -------------------------------* TK inter setup *------------------------------- #
 
 root = ThemedTk(theme='black')
@@ -276,37 +278,132 @@ root.configure(background="black")
 # Int value for slider
 var = IntVar()
 
-# TODO get real highest bid
-highest_bid = 20
-
 # -------------------------------* Poker table *------------------------------- #
-canvas = Canvas(width=1024, height=576, bg="black", highlightthickness=0)
+canvas = Canvas(width=1024, height=586, bg="black", highlightthickness=0)
 bg = PhotoImage(file="images/logo/bg.png")
 canvas.create_image(0, 0, image=bg, anchor=NW)
 canvas.pack(pady=20, padx=20)
 canvas.grid_propagate(False)
 
-# -------------------------------* User Input *------------------------------- #
 my_frame = Frame(root, bg="black")
 my_frame.pack(pady=20, padx=20)
 
-call_button = ttk.Button(my_frame, text="Call", command=call)
+# -------------------------------* User selected number of player *------------------------------- #
+game_start = False
 
-call_button.grid(row=0, column=3, pady=5)
+global num_player, reward
+reward = 0
 
-fold_button = ttk.Button(my_frame, text="Fold", command=show_card)
-fold_button.grid(row=0, column=4, padx=10, pady=5)
+while not game_start:
+    num_player = int(input("How many players you want? (2-8 players) "))
+    if 2 <= num_player <= 8:
+        game_start = True
+    else:
+        print("Please input number between 2 to 8")
 
-raise_button = ttk.Button(my_frame, text="Raise", command=_raise)
-raise_button.grid(row=0, column=2, padx=10, pady=5)
+# -------------------------------* Game Loop *------------------------------- #
+poker = Poker.Dealer(num_player)
+Round = 0
 
-win_test = ttk.Button(my_frame, text="Win test", command=end_round)
-win_test.grid(row=0, column=5, padx=10, pady=5)
+Round = 0
+Index = []
+C_L = []
+j = 0
+for i in poker.players:
+    j += 1
+    C_L.append('name_' + str(j))
+    C_L.append('seat_' + str(j))
+    C_L.append('fold_' + str(j))
+    C_L.append('all_in_' + str(j))
+    C_L.append('chips_' + str(j))
+    C_L.append('bet_' + str(j))
+    C_L.append('hands_' + str(j))
+    C_L.append('type_' + str(j))
+    C_L.append('score_' + str(j))
+A = [[], [], [], []]
+for i in poker.players:
+    for k in range(9):
+        A.append([])
 
-show_card()
+while poker.players[0].alive and len(poker.players) > 1:
+    if poker.stage == 'begin':
+        Round += 1
+        poker.begin()
+    elif poker.stage == 'preflop':
+        poker.preflop()
+    elif poker.stage == 'flop':
+        poker.flop()
+    elif poker.stage == 'turn':
+        poker.turn()
+    elif poker.stage == 'river':
+        poker.river()
 
-value_label = ttk.Label(my_frame, text=get_current_value())
-value_label.grid(row=0, column=1)
+    Index.append(Round)
+    A[0].append(poker.stage)
+    A[1].append(poker.pod)
+    A[2].append(poker.highbet)
+    A[3].append(poker.board)
 
+    for i in range(len(poker.players)):
+        A[i * 9 + 4].append(poker.players[i].name)
+        A[i * 9 + 5].append(poker.players[i].seat)
+        A[i * 9 + 6].append(poker.players[i].fold)
+        A[i * 9 + 7].append(poker.players[i].allin)
+        A[i * 9 + 8].append(poker.players[i].chips)
+        A[i * 9 + 9].append(poker.players[i].bet)
+        A[i * 9 + 10].append(poker.players[i].hands)
+        A[i * 9 + 11].append(poker.players[i].type)
+        A[i * 9 + 12].append(poker.players[i].score)
 
+    poker.get()
+
+    data = {"board": {'cards': poker.board, 'highest_bid': poker.highbet, 'pot': poker.pod, 'stage': poker.stage}}
+
+    for i in poker.players:
+        data[i.name] = {"seats": i.seat, 'fold': i.fold, 'chips': i.chips, "cards": i.hands,
+                        "type": i.type, "score": i.score, "bet": i.bet}
+    poker.data = data
+    show_card(data)
+
+    # -------------------------------* User Input *------------------------------- #
+
+    call_button = ttk.Button(my_frame, text="Call", command=call)
+    call_button.grid(row=0, column=3, pady=5)
+
+    fold_button = ttk.Button(my_frame, text="Fold", command=fold)
+    fold_button.grid(row=0, column=4, padx=10, pady=5)
+
+    raise_button = ttk.Button(my_frame, text="Raise", command=_raise)
+    raise_button.grid(row=0, column=2, padx=10, pady=5)
+
+    value_label = ttk.Label(my_frame, text=get_current_value())
+    value_label.grid(row=0, column=1)
+    # -------------------------------* Pause the loop until user click a button *------------------------------- #
+    # I have comment line 91-92 for faster test
+    # change to True for loop pause
+    loop_pause = True
+
+    while loop_pause:
+        root.update()
+        value_label.update()
+
+for i in A:
+    while len(i) < len(A[0]):
+        i.append('')
+
+R = pd.DataFrame({'next_stage': A[0]
+                     , 'pod': A[1]
+                     , 'high_bet': A[2]
+                     , 'board': A[3]
+                  })
+for i in range(len(C_L)):
+    R[C_L[i]] = A[i + 4]
+R.index = Index
+R.to_csv('Record.csv', encoding="utf_8_sig")
+
+root.destroy()
+poker.end()
 root.mainloop()
+
+
+
