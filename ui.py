@@ -91,7 +91,7 @@ def get_flop_card(cards, stage):
 
 def get_player_card(cards, k, stage, fold):
     global Round
-    if Round != 0:
+    if Round > 1:
         time.sleep(0.1)
     global player_image
     n = 0
@@ -128,19 +128,21 @@ def get_player_card(cards, k, stage, fold):
 def fold():
     global loop_pause
     loop_pause = False
+    # Poker.You.decision(action="fold")
 
 
 def call():
     global loop_pause
     loop_pause = False
+    # Poker.You.decision(action="call")
+
 
 
 def _raise():
     global loop_pause
     loop_pause = False
-
     bid = int(slider.get())
-    print(bid)
+    # Poker.You.decision(action="raise", bid=bid)
 
 
 # -----------------------* Display Slider value *----------------------- #
