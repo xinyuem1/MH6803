@@ -91,8 +91,7 @@ def get_flop_card(cards, stage):
 
 def get_player_card(cards, k, stage, fold):
     global Round
-    if Round > 1:
-        time.sleep(0.1)
+    time.sleep(0.1)
     global player_image
     n = 0
     if fold:
@@ -125,25 +124,38 @@ def get_player_card(cards, k, stage, fold):
 
 
 # -----------------------* User Input Command *----------------------- #
-def fold():
+def _continue():
     global loop_pause
     loop_pause = False
-    # Poker.You.decision(action="fold")
+
+def fold():
+    if not players["You"]["fold"]:
+        global loop_pause
+        loop_pause = False
+        # Poker.You.decision(action="fold")
+    else:
+        print("You're already fold")
 
 
 def call():
-    global loop_pause
-    loop_pause = False
-    # Poker.You.decision(action="call")
+    if not players["You"]["fold"]:
+        global loop_pause
+        loop_pause = False
+        # Poker.You.decision(action="call")
+    else:
+        print("You're already fold")
 
 
 
 def _raise():
-    global loop_pause
-    loop_pause = False
+    if not players["You"]["fold"]:
+        global loop_pause
+        loop_pause = False
+        # Poker.You.decision(action="raise", bid=bid)
+    else:
+        print("You're already fold")
     bid = int(slider.get())
-    # Poker.You.decision(action="raise", bid=bid)
-
+    print(bid)
 
 # -----------------------* Display Slider value *----------------------- #
 def get_current_value():
@@ -380,6 +392,9 @@ while poker.players[0].alive and len(poker.players) > 1:
 
     value_label = ttk.Label(my_frame, text=get_current_value())
     value_label.grid(row=0, column=1)
+
+    continue_button = ttk.Button(my_frame, text="Continue", command=_continue)
+    continue_button.grid(row=0, column=5, padx=10, pady=5)
     # -------------------------------* Pause the loop until user click a button *------------------------------- #
     # I have comment line 91-92 for faster test
     # change to True for loop pause
