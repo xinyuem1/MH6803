@@ -1,7 +1,5 @@
 # -------------------------------* Import statement *------------------------------- #
 import tkinter.messagebox
-
-import Poker
 import Poker_Draft
 from tkinter import *
 from tkinter import ttk
@@ -64,15 +62,16 @@ def get_flop_card(cards, stage):
 
     if stage == 'begin':
         winner = flop['winner']
-        print(winner)
         try:
             win_con = players[winner]['type']
 
         except KeyError:
-            win_con = "All fold"
             for i in players:
                 if players[i]["fold"] == False:
                     winner = i
+                    win_con = "All fold"
+        else:
+            win_con = "Last Fold"
 
         # -----------------------* Display Winner label *----------------------- #
         flop["frame"][2].config(width=180, height=50, bg="#a00405", bd=2)
@@ -133,8 +132,10 @@ def fold():
         global loop_pause
         loop_pause = False
         you.fold = True
-    else:
+    elif players["You"]["fold"]:
         tkinter.messagebox.showinfo(message="You're already fold")
+    else:
+        tkinter.messagebox.showinfo(message="Please press the Continue button")
 
 
 def call():
@@ -142,20 +143,26 @@ def call():
         global loop_pause
         loop_pause = False
         highbet = flop["highest_bid"]
-        bid = highbet - players["You"]["need"]
         you.call(highbet=highbet)
-    else:
+    elif players["You"]["fold"]:
         tkinter.messagebox.showinfo(message="You're already fold")
+    else:
+        tkinter.messagebox.showinfo(message="Please press the Continue button")
+
 
 
 def _raise():
     bid = int(slider.get())
-    if not players["You"]["fold"] and len(players["You"]["cards"]) > 0 and flop['stage'] != 'begin':
+    if bid < flop["highest_bid"]:
+        tkinter.messagebox.showinfo(message="You don't have enough chips")
+    elif not players["You"]["fold"] and len(players["You"]["cards"]) > 0 and flop['stage'] != 'begin':
         global loop_pause
         loop_pause = False
         you.rise(bet=bid)
-    else:
+    elif players["You"]["fold"]:
         tkinter.messagebox.showinfo(message="You're already fold")
+    else:
+        tkinter.messagebox.showinfo(message="Please press the Continue button")
 
 
 # -----------------------* Display Slider value *----------------------- #
@@ -305,7 +312,7 @@ my_frame.pack(pady=20, padx=20)
 # -------------------------------* User selected number of player *------------------------------- #
 game_start = False
 
-global num_player, reward
+global reward
 reward = 0
 
 while not game_start:
@@ -369,7 +376,7 @@ while poker.players[0].alive and len(poker.players) > 1:
         A[i * 9 + 11].append(poker.players[i].type)
         A[i * 9 + 12].append(poker.players[i].score)
 
-    poker.get()
+    # poker.get()
 
     data = {"board": {'cards': poker.board, 'highest_bid': poker.highbet, 'pot': poker.pod, 'stage': poker.stage,
                       'winner': poker.winner}}
@@ -421,5 +428,4 @@ R.index = Index
 R.to_csv('Record.csv', encoding="utf_8_sig")
 
 root.destroy()
-poker.end()
 root.mainloop()

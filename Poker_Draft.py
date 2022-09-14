@@ -28,7 +28,7 @@ class Poker: #initialize cards and draw() from the top
 
         self.c = box
         self.t = -1
-        print(self.c)
+        # print(self.c)
 
     
 
@@ -37,7 +37,7 @@ class Poker: #initialize cards and draw() from the top
         return self.c[self.t]
 
 
-P = Poker()        
+P = Poker()
 
 
 class ComputerPlayer:
@@ -220,11 +220,9 @@ class You: ###mutual port
     def call(self, highbet=0):
         self.need = highbet - self.bet
         self.bet_amount = self.need
-        print("call", self.need, self.bet_amount)
 
     def rise(self, bet):
         self.bet_amount = bet
-        print("amount", self.bet_amount)
 
     def decision(self, stage, pod, highbet, board):
         bet = 0  # former bet amount
@@ -253,7 +251,6 @@ class You: ###mutual port
                 self.bet += bet
 
             # return[bet amount，total be amount，all in or not
-            print(f"{self.name}, bet:{bet}, bet_amount{self.bet_amount}, need{self.need}")
 
             return [bet, self.bet, self.allin, self.fold]
 
@@ -609,7 +606,9 @@ class Dealer:
                     s.append(s_t[0])
                 else:
                     s.append(0)
-
+            for i in self.players:
+                if i.score == max(s):
+                    self.winner = i.name
             # prioritize all in player
             while a > 0: 
                 for i in range(len(self.players)):
@@ -639,7 +638,6 @@ class Dealer:
                 for i in self.players:
                     if i.score == max(s):
                         i.chips += bonus
-                        self.winner = i.name
 
                 self.pod = 0
 
@@ -725,7 +723,6 @@ class Dealer:
         self.actionable = len(self.players)
         B = False
         while self.actionable > 1:
-            print("test",self.players[0].bet_amount)
             for i in self.order:
                 if (not self.players[i].fold) and (not self.players[i].allin):
                     result = self.players[i].decision('preflop', self.pod, self.highbet, self.board)
@@ -752,7 +749,6 @@ class Dealer:
     
     # flop round, flop first 3 cards from dealer
     def flop(self):
-        print("test", self.players[0].bet_amount)
         self.board = [P.draw(), P.draw(), P.draw()]
         self.done = 0
         B = False
@@ -780,7 +776,6 @@ class Dealer:
     
     # turn card round (second last public card)
     def turn(self):
-        print("test", self.players[0].bet_amount)
         self.done = 0
         self.board.append(P.draw())
         B = False
@@ -798,7 +793,7 @@ class Dealer:
                         self.done -= 1
                     if self.done >= self.actionable:
                         B = True
-                        print('AAAAAAAAAA')
+                        # print('AAAAAAAAAA')
                         break
             if B:
                 break
@@ -829,101 +824,6 @@ class Dealer:
                         break
             if B:
                 break
-        self.settle() 
-        
-        
-    # loop until end of the game, save action and card record in csv file
-    def flow(self):
-        Round = 0
-        Index = []
-        C_L = []
-        j = 0
-        for i in self.players:
-            j += 1
-            C_L.append('name_' + str(j))
-            C_L.append('seat_' + str(j))
-            C_L.append('fold_' + str(j))
-            C_L.append('all_in_' + str(j))
-            C_L.append('chips_' + str(j))
-            C_L.append('bet_' + str(j))
-            C_L.append('hands_' + str(j))
-            C_L.append('type_' + str(j))
-            C_L.append('score_' + str(j))
-        A = [[], [], [], []]
-        for i in self.players:
-            for k in range(9):
-                A.append([])
-
-        while self.players[0].alive and len(self.players) > 1:
-            if self.stage == 'begin':
-                Round += 1
-                self.begin()
-            elif self.stage == 'preflop':
-                self.preflop()
-            elif self.stage == 'flop':
-                self.flop()
-            elif self.stage == 'turn':
-                self.turn()
-            elif self.stage == 'river':
-                self.river()
-
-            Index.append(Round)
-            A[0].append(self.stage)
-            A[1].append(self.pod)
-            A[2].append(self.highbet)
-            A[3].append(self.board)
-
-            for i in range(len(self.players)):
-                A[i*9+4].append(self.players[i].name)
-                A[i*9+5].append(self.players[i].seat)
-                A[i*9+6].append(self.players[i].fold)
-                A[i*9+7].append(self.players[i].allin)
-                A[i*9+8].append(self.players[i].chips)
-                A[i*9+9].append(self.players[i].bet)
-                A[i*9+10].append(self.players[i].hands)
-                A[i*9+11].append(self.players[i].type)
-                A[i*9+12].append(self.players[i].score)
-
-            self.get()
-
-        for i in A:
-            while len(i) < len(A[0]):
-                i.append('')
-
-
-        R = pd.DataFrame({'next_stage': A[0]
-                          ,'pod': A[1]
-                          ,'high_bet': A[2]
-                          ,'board': A[3]
-                          })
-        for i in range(len(C_L)):
-            R[C_L[i]] = A[i+4]
-        R.index = Index
-        R.to_csv('Record.csv', encoding="utf_8_sig")
-
-
-    # run game
-    def get(self):
-        print('#######################')
-        print('nextstage:', self.stage)
-        print('board:', self.board)
-        print('highbet:', self.highbet)
-        print('pod:', self.pod)
-        ALL = 0
-        for i in self.players:
-            print(i.name, i.seat, 'F:', i.fold, 'C:', i.chips, i.hands,  i.type, i.score)
-            ALL += i.chips
-        print('***', ALL + self.pod, '***')
-           
-        
-        
-            
-#start game with 5 players 
-# D = Dealer(7)
-# D.flow()
-#
-
-
-
+        self.settle()
 
 
