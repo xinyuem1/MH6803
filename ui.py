@@ -1,14 +1,14 @@
 # -------------------------------* Import statement *------------------------------- #
+import tkinter.messagebox
+
 import Poker
+import Poker_Draft
 from tkinter import *
 from tkinter import ttk
 from PIL import Image, ImageTk
 from ttkthemes import ThemedTk
 import time
 import pandas as pd
-
-
-# -------------------------------* test deck of cards *------------------------------- #
 
 
 # -------------------------------* Get data from poker file *------------------------------- #
@@ -59,24 +59,20 @@ def get_flop_card(cards, stage):
         n += 1
 
     # -----------------------* Check Round end / Show winner *----------------------- #
-    score = 0
-    winner = ''
-    win_con = ''
 
     global reward
 
     if stage == 'begin':
-        for s in players:
-            if players[s]['score'] > score:
-                print(s, players[s]['score'])
-                winner = s
-                win_con = players[s]['type']
-                score = players[s]['score']
+        winner = flop['winner']
+        print(winner)
+        try:
+            win_con = players[winner]['type']
 
-            elif len(poker.notfold()) == 1:
-                win_con = "All fold"
-                if not players[s]['fold']:
-                    winner = s
+        except KeyError:
+            win_con = "All fold"
+            for i in players:
+                if players[i]["fold"] == False:
+                    winner = i
 
         # -----------------------* Display Winner label *----------------------- #
         flop["frame"][2].config(width=180, height=50, bg="#a00405", bd=2)
@@ -125,37 +121,42 @@ def get_player_card(cards, k, stage, fold):
 
 # -----------------------* User Input Command *----------------------- #
 def _continue():
-    global loop_pause
-    loop_pause = False
-
-def fold():
-    if not players["You"]["fold"]:
+    if players["You"]["fold"] or len(players["You"]["cards"]) == 0 or flop['stage'] == 'begin':
         global loop_pause
         loop_pause = False
-        # Poker.You.decision(action="fold")
     else:
-        print("You're already fold")
+        tkinter.messagebox.showinfo(message="Please choose your action")
+
+
+def fold():
+    if not players["You"]["fold"] and len(players["You"]["cards"]) > 0 and flop['stage'] != 'begin':
+        global loop_pause
+        loop_pause = False
+        you.fold = True
+    else:
+        tkinter.messagebox.showinfo(message="You're already fold")
 
 
 def call():
-    if not players["You"]["fold"]:
+    if not players["You"]["fold"] and len(players["You"]["cards"]) > 0 and flop['stage'] != 'begin':
         global loop_pause
         loop_pause = False
-        # Poker.You.decision(action="call")
+        highbet = flop["highest_bid"]
+        bid = highbet - players["You"]["need"]
+        you.call(highbet=highbet)
     else:
-        print("You're already fold")
-
+        tkinter.messagebox.showinfo(message="You're already fold")
 
 
 def _raise():
-    if not players["You"]["fold"]:
+    bid = int(slider.get())
+    if not players["You"]["fold"] and len(players["You"]["cards"]) > 0 and flop['stage'] != 'begin':
         global loop_pause
         loop_pause = False
-        # Poker.You.decision(action="raise", bid=bid)
+        you.rise(bet=bid)
     else:
-        print("You're already fold")
-    bid = int(slider.get())
-    print(bid)
+        tkinter.messagebox.showinfo(message="You're already fold")
+
 
 # -----------------------* Display Slider value *----------------------- #
 def get_current_value():
@@ -182,8 +183,7 @@ def show_card(d):
     global reward
     if flop['pot'] >= reward:
         reward = flop['pot']
-    print(flop['pot'], reward)
-    # -----------------------* Create card frame *----------------------- #
+    # -----------------------* Table card frame *----------------------- #
     flop["frame"].append(LabelFrame(canvas, bg="#1e7849", borderwidth=0))
     flop["frame"][0].place(x=360, y=240)
     no_of_loop = 0
@@ -293,7 +293,7 @@ root.configure(background="black")
 var = IntVar()
 
 # -------------------------------* Poker table *------------------------------- #
-canvas = Canvas(width=1024, height=586, bg="black", highlightthickness=0)
+canvas = Canvas(root, width=1024, height=586, bg="black", highlightthickness=0)
 bg = PhotoImage(file="images/logo/bg.png")
 canvas.create_image(0, 0, image=bg, anchor=NW)
 canvas.pack(pady=20, padx=20)
@@ -316,7 +316,7 @@ while not game_start:
         print("Please input number between 2 to 8")
 
 # -------------------------------* Game Loop *------------------------------- #
-poker = Poker.Dealer(num_player)
+poker = Poker_Draft.Dealer(num_player)
 Round = 0
 
 Round = 0
@@ -371,13 +371,15 @@ while poker.players[0].alive and len(poker.players) > 1:
 
     poker.get()
 
-    data = {"board": {'cards': poker.board, 'highest_bid': poker.highbet, 'pot': poker.pod, 'stage': poker.stage}}
+    data = {"board": {'cards': poker.board, 'highest_bid': poker.highbet, 'pot': poker.pod, 'stage': poker.stage,
+                      'winner': poker.winner}}
 
     for i in poker.players:
         data[i.name] = {"seats": i.seat, 'fold': i.fold, 'chips': i.chips, "cards": i.hands,
-                        "type": i.type, "score": i.score, "bet": i.bet}
+                        "type": i.type, "score": i.score, "bet": i.bet, "need": i.need}
     poker.data = data
     show_card(data)
+    you = poker.players[0]
 
     # -------------------------------* User Input *------------------------------- #
 
@@ -421,6 +423,3 @@ R.to_csv('Record.csv', encoding="utf_8_sig")
 root.destroy()
 poker.end()
 root.mainloop()
-
-
-
