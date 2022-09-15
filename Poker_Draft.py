@@ -82,7 +82,7 @@ class ComputerPlayer:
         self.type = s_t[1]
         
 
-    def bet_strategy(self, board, need, stage):
+    def bet_strategy(self, board, need, stage, not_fold):
         hand_num = (self.hands[0][1], self.hands[1][1])
         bet_amount = 0
         board_num = [i[1]for i in board]
@@ -123,9 +123,9 @@ class ComputerPlayer:
             if self.hands[0][0] == self.hands[1][0]:
                 r_fold -= 0.1
                 r_add += 0.05
-        
+
         # need random on bet or not&bet amount
-        if r1 < r_fold:
+        if r1 < r_fold and not(len(not_fold) == 1):
             self.fold = True
         else:
             if r2 < r_add:
@@ -139,7 +139,7 @@ class ComputerPlayer:
 
         
     # decide action for player
-    def decision(self, stage, pod, highbet, board):
+    def decision(self, stage, pod, highbet, board, not_fold):
         bet = 0 # former bet amount
         needed = highbet - self.bet #least bet amount
 
@@ -155,12 +155,12 @@ class ComputerPlayer:
                             bet = 2
                         else:
                             # if need random 
-                            bet = self.bet_strategy(board, needed, stage)
+                            bet = self.bet_strategy(board, needed, stage, not_fold)
                         self.blind = False
                     else:
-                        bet = self.bet_strategy(board, needed, stage)                  
+                        bet = self.bet_strategy(board, needed, stage, not_fold)
                 else:
-                    bet = self.bet_strategy(board, needed, stage)
+                    bet = self.bet_strategy(board, needed, stage, not_fold)
                 # if intended bet amount larger than chips, indicate "all in"
                 bet = round(bet)
                 if bet > self.chips:
@@ -206,17 +206,14 @@ class You: ###mutual port
         self.bet_amount = 0
         if self.chips == 0:
             self.alive = 0
-            
-            
+
     def r_hands(self):  #draw cards(each player)
         self.hands = [P.draw(), P.draw()]
-
 
     def w_st(self, s_t):    # store card type and corresponding score
         self.score = s_t[0]
         self.type = s_t[1]
-        
-    
+
     def call(self, highbet=0):
         self.need = highbet - self.bet
         self.bet_amount = self.need
@@ -224,7 +221,7 @@ class You: ###mutual port
     def rise(self, bet):
         self.bet_amount = bet
 
-    def decision(self, stage, pod, highbet, board):
+    def decision(self, stage, pod, highbet, board, not_fold):
         bet = 0  # former bet amount
         self.need = highbet - self.bet  # least bet amount
 
@@ -251,7 +248,6 @@ class You: ###mutual port
                 self.bet += bet
 
             # return[bet amount，total be amount，all in or not
-
             return [bet, self.bet, self.allin, self.fold]
 
 
@@ -584,7 +580,6 @@ class Dealer:
         if len(self.notfold()) == 1:
             self.players[self.notfold()[0]].chips += self.pod
             self.pod = 0
-            self.stage = "begin"
         else:
             #score list(order by player no.)
             s = [] 
@@ -725,7 +720,7 @@ class Dealer:
         while self.actionable > 1:
             for i in self.order:
                 if (not self.players[i].fold) and (not self.players[i].allin):
-                    result = self.players[i].decision('preflop', self.pod, self.highbet, self.board)
+                    result = self.players[i].decision('preflop', self.pod, self.highbet, self.board, self.notfold())
                     self.pod += result[0]
                     if result[1] > self.highbet:
                         self.highbet = result[1]
@@ -755,7 +750,7 @@ class Dealer:
         while self.actionable > 1:
             for i in self.order:
                 if (not self.players[i].fold) and (not self.players[i].allin):
-                    result = self.players[i].decision('flop', self.pod, self.highbet, self.board)
+                    result = self.players[i].decision('flop', self.pod, self.highbet, self.board, self.notfold())
                     self.pod += result[0]
                     if result[1] > self.highbet:
                         self.highbet = result[1]
@@ -782,7 +777,7 @@ class Dealer:
         while self.actionable > 1:
             for i in self.order:
                 if (not self.players[i].fold) and (not self.players[i].allin):
-                    result = self.players[i].decision('turn', self.pod, self.highbet, self.board)
+                    result = self.players[i].decision('turn', self.pod, self.highbet, self.board, self.notfold())
                     self.pod += result[0]
                     if result[1] > self.highbet:
                         self.highbet = result[1]
@@ -810,7 +805,7 @@ class Dealer:
         while self.actionable > 1:
             for i in self.order:
                 if (not self.players[i].fold) and (not self.players[i].allin):
-                    result = self.players[i].decision('river', self.pod, self.highbet, self.board)
+                    result = self.players[i].decision('river', self.pod, self.highbet, self.board, self.notfold())
                     self.pod += result[0]
                     if result[1] > self.highbet:
                         self.highbet = result[1]

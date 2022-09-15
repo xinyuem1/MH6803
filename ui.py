@@ -70,8 +70,9 @@ def get_flop_card(cards, stage):
                 if players[i]["fold"] == False:
                     winner = i
                     win_con = "All fold"
-        else:
-            win_con = "Last Fold"
+
+        if win_con is None:
+            win_con = "Last fold"
 
         # -----------------------* Display Winner label *----------------------- #
         flop["frame"][2].config(width=180, height=50, bg="#a00405", bd=2)
@@ -120,7 +121,7 @@ def get_player_card(cards, k, stage, fold):
 
 # -----------------------* User Input Command *----------------------- #
 def _continue():
-    if players["You"]["fold"] or len(players["You"]["cards"]) == 0 or flop['stage'] == 'begin':
+    if players["You"]["fold"] or len(players["You"]["cards"]) == 0 or flop['stage'] == 'begin' or players["You"]["chips"] == 0:
         global loop_pause
         loop_pause = False
     else:
@@ -128,14 +129,17 @@ def _continue():
 
 
 def fold():
-    if not players["You"]["fold"] and len(players["You"]["cards"]) > 0 and flop['stage'] != 'begin':
+    if not players["You"]["fold"] and len(players["You"]["cards"]) > 0 and flop['stage'] != 'begin' \
+            and len(flop['not_fold']) != 1:
         global loop_pause
         loop_pause = False
         you.fold = True
     elif players["You"]["fold"]:
         tkinter.messagebox.showinfo(message="You're already fold")
-    else:
-        tkinter.messagebox.showinfo(message="Please press the Continue button")
+    elif len(flop['not_fold']) == 1:
+        tkinter.messagebox.showinfo(message="Other players all folded")
+    elif players["You"]["chips"] == 0:
+        tkinter.messagebox.showinfo(message="You're already All-in")
 
 
 def call():
@@ -146,9 +150,8 @@ def call():
         you.call(highbet=highbet)
     elif players["You"]["fold"]:
         tkinter.messagebox.showinfo(message="You're already fold")
-    else:
-        tkinter.messagebox.showinfo(message="Please press the Continue button")
-
+    elif players["You"]["chips"] == 0:
+        tkinter.messagebox.showinfo(message="You're already All-in")
 
 
 def _raise():
@@ -161,8 +164,8 @@ def _raise():
         you.rise(bet=bid)
     elif players["You"]["fold"]:
         tkinter.messagebox.showinfo(message="You're already fold")
-    else:
-        tkinter.messagebox.showinfo(message="Please press the Continue button")
+    elif players["You"]["chips"] == 0:
+        tkinter.messagebox.showinfo(message="You're already All-in")
 
 
 # -----------------------* Display Slider value *----------------------- #
@@ -379,7 +382,7 @@ while poker.players[0].alive and len(poker.players) > 1:
     # poker.get()
 
     data = {"board": {'cards': poker.board, 'highest_bid': poker.highbet, 'pot': poker.pod, 'stage': poker.stage,
-                      'winner': poker.winner}}
+                      'winner': poker.winner, 'not_fold': poker.notfold()}}
 
     for i in poker.players:
         data[i.name] = {"seats": i.seat, 'fold': i.fold, 'chips': i.chips, "cards": i.hands,
